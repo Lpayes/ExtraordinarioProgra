@@ -145,6 +145,7 @@
             dateTimePickerFFin.Name = "dateTimePickerFFin";
             dateTimePickerFFin.Size = new Size(288, 25);
             dateTimePickerFFin.TabIndex = 36;
+            dateTimePickerFFin.ValueChanged += dateTimePickerFFin_ValueChanged_1;
             // 
             // dateTimePickerFInicio
             // 
@@ -153,6 +154,7 @@
             dateTimePickerFInicio.Name = "dateTimePickerFInicio";
             dateTimePickerFInicio.Size = new Size(288, 25);
             dateTimePickerFInicio.TabIndex = 35;
+            dateTimePickerFInicio.ValueChanged += dateTimePickerFInicio_ValueChanged_1;
             // 
             // numericUpDownPrecio
             // 

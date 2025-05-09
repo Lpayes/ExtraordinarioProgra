@@ -217,6 +217,7 @@
             dateTimePickerFNacimeinto.Name = "dateTimePickerFNacimeinto";
             dateTimePickerFNacimeinto.Size = new Size(290, 25);
             dateTimePickerFNacimeinto.TabIndex = 32;
+            dateTimePickerFNacimeinto.ValueChanged += dateTimePickerFNacimeinto_ValueChanged_1;
             // 
             // textBoxApellidoMiembro
             // 

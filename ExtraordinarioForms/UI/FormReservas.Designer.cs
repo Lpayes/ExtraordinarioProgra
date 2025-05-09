@@ -180,6 +180,7 @@
             dateTimePickerFReserva.Name = "dateTimePickerFReserva";
             dateTimePickerFReserva.Size = new Size(258, 25);
             dateTimePickerFReserva.TabIndex = 32;
+            dateTimePickerFReserva.ValueChanged += dateTimePickerFReserva_ValueChanged_1;
             // 
             // labelIdClase
             // 

@@ -273,13 +273,13 @@ namespace GimnasioManager.UI
             }
         }
 
-        private void dateTimePickerFInicio_ValueChanged(object sender, EventArgs e)
+        private void dateTimePickerFInicio_ValueChanged_1(object sender, EventArgs e)
         {
             dateTimePickerFInicio.Format = DateTimePickerFormat.Short;
             dateTimePickerFInicio.CustomFormat = "dd/MM/yyyy";
         }
 
-        private void dateTimePickerFFin_ValueChanged(object sender, EventArgs e)
+        private void dateTimePickerFFin_ValueChanged_1(object sender, EventArgs e)
         {
             dateTimePickerFFin.Format = DateTimePickerFormat.Short;
             dateTimePickerFFin.CustomFormat = "dd/MM/yyyy";

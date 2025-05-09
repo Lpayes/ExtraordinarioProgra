@@ -29,7 +29,7 @@ namespace GimnasioManager.UI
         private void FormReservas_Load(object sender, EventArgs e)
         {
             dateTimePickerFReserva.Format = DateTimePickerFormat.Custom;
-            dateTimePickerFReserva.CustomFormat = " "; 
+            dateTimePickerFReserva.CustomFormat = " ";
         }
 
         private void ConfigurarControlesReserva(string accion)
@@ -75,8 +75,8 @@ namespace GimnasioManager.UI
         private void LimpiarControlesReserva()
         {
             textBoxIdReserva.Clear();
-            textBoxIdMiembroReserva.Clear(); 
-            textBoxIdClaseReserva.Clear(); 
+            textBoxIdMiembroReserva.Clear();
+            textBoxIdClaseReserva.Clear();
 
             dateTimePickerFReserva.Format = DateTimePickerFormat.Custom;
             dateTimePickerFReserva.CustomFormat = " ";
@@ -294,7 +294,7 @@ namespace GimnasioManager.UI
             }
         }
 
-        private void dateTimePickerFReserva_ValueChanged(object sender, EventArgs e)
+        private void dateTimePickerFReserva_ValueChanged_1(object sender, EventArgs e)
         {
             dateTimePickerFReserva.Format = DateTimePickerFormat.Short;
             dateTimePickerFReserva.CustomFormat = "dd/MM/yyyy";
@@ -337,17 +337,17 @@ namespace GimnasioManager.UI
         {
             switch (accionActualReserva)
             {
-                case 1: 
+                case 1:
                     RegistrarReserva();
                     break;
 
-                case 2: 
+                case 2:
                     VerReservas();
                     break;
-                case 3: 
+                case 3:
                     ActualizarReserva();
                     break;
-                case 4: 
+                case 4:
                     EliminarReserva();
                     break;
                 default:

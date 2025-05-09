@@ -30,11 +30,11 @@ namespace GimnasioManager.UI
         {
             comboBoxNombreMiembro.Items.Clear();
             var miembros = _miembroService.ObtenerTodos();
-            if (miembros != null && miembros.Any()) 
+            if (miembros != null && miembros.Any())
             {
                 foreach (var miembro in miembros)
                 {
-                    comboBoxNombreMiembro.Items.Add(miembro.Nombre); 
+                    comboBoxNombreMiembro.Items.Add(miembro.Nombre);
                 }
             }
             else
@@ -120,17 +120,17 @@ namespace GimnasioManager.UI
 
         private void LimpiarControlesMiembro()
         {
-            textBoxIdMiembro.Clear(); 
-            comboBoxNombreMiembro.SelectedIndex = -1; 
-            comboBoxNombreMiembro.Text = string.Empty; 
-            textBoxApellidoMiembro.Clear(); 
-            textBoxEmailMiembro.Clear(); 
-            textBoxTelefonoMiembro.Clear(); 
-            textBoxIdMembresiaMiembro.Clear(); 
+            textBoxIdMiembro.Clear();
+            comboBoxNombreMiembro.SelectedIndex = -1;
+            comboBoxNombreMiembro.Text = string.Empty;
+            textBoxApellidoMiembro.Clear();
+            textBoxEmailMiembro.Clear();
+            textBoxTelefonoMiembro.Clear();
+            textBoxIdMembresiaMiembro.Clear();
 
 
             dateTimePickerFNacimeinto.Format = DateTimePickerFormat.Custom;
-            dateTimePickerFNacimeinto.CustomFormat = " "; 
+            dateTimePickerFNacimeinto.CustomFormat = " ";
         }
 
         private void RegistrarMiembro()
@@ -314,12 +314,12 @@ namespace GimnasioManager.UI
                                 return;
                             }
 
-                            miembro.ID_Membresia = idMembresia; 
+                            miembro.ID_Membresia = idMembresia;
                         }
 
                         _miembroService.Actualizar(miembro);
                         MessageBox.Show("¡Miembro actualizado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LlenarComboBoxMiembros(); 
+                        LlenarComboBoxMiembros();
                     }
                     else
                     {
@@ -373,7 +373,7 @@ namespace GimnasioManager.UI
             }
         }
 
-        private void dateTimePickerFNacimeinto_ValueChanged(object sender, EventArgs e)
+        private void dateTimePickerFNacimeinto_ValueChanged_1(object sender, EventArgs e)
         {
             dateTimePickerFNacimeinto.Format = DateTimePickerFormat.Short;
             dateTimePickerFNacimeinto.CustomFormat = "dd/MM/yyyy";
@@ -425,20 +425,20 @@ namespace GimnasioManager.UI
         {
             switch (accionActualMiembro)
             {
-                case 1: 
+                case 1:
                     RegistrarMiembro();
                     break;
 
-                case 2: 
+                case 2:
                     ListarMiembros();
                     break;
-                case 3: 
+                case 3:
                     BuscarMiembroPorNombre();
                     break;
-                case 4: 
+                case 4:
                     ActualizarMiembro();
                     break;
-                case 5: 
+                case 5:
                     EliminarMiembro();
                     break;
                 default:
@@ -448,5 +448,6 @@ namespace GimnasioManager.UI
 
             }
         }
+
     }
 }
