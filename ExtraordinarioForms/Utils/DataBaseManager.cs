@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Windows.Forms; // Agregar esta referencia para usar MessageBox
+using System.Windows.Forms; // Agregué esta referencia para usar MessageBox
 using Microsoft.Data.SqlClient;
 
 namespace GimnasioManager.Utils

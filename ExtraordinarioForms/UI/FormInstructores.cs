@@ -2,6 +2,9 @@
 using GimnasioManager.Services;
 using System.Data;
 using GimnasioManager.Utils;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace GimnasioManager.UI
 {
@@ -11,6 +14,7 @@ namespace GimnasioManager.UI
         private int accionActualInstructor = 0;
         private readonly InstructorService _instructorService;
         private readonly ClaseService _claseService;
+
         public FormInstructores()
         {
             InitializeComponent();
@@ -100,6 +104,7 @@ namespace GimnasioManager.UI
             comboBoxNombreInstructor.Text = string.Empty;
             textBoxApellidoInstructor.Clear();
             textBoxEspecialidadInstructor.Clear();
+            dataGridViewInstructor.DataSource = null;
         }
 
         private void RegistrarInstructor()
@@ -129,16 +134,8 @@ namespace GimnasioManager.UI
                 Especialidad = textBoxEspecialidadInstructor.Text
             };
 
-            try
-            {
-                _instructorService.Crear(instructor);
-                MessageBox.Show("¡Instructor registrado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LlenarComboBoxInstructores();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al registrar el instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            _instructorService.Crear(instructor);
+            LlenarComboBoxInstructores();
         }
 
         private void ListarInstructores()
@@ -175,11 +172,12 @@ namespace GimnasioManager.UI
                     if (instructores.Any())
                     {
                         dataGridViewInstructor.DataSource = instructores;
+                        CompletarControlesInstructor(instructores.First());
 
-                        var instructorSeleccionado = instructores.FirstOrDefault();
-                        if (instructorSeleccionado != null)
+                        if (instructores.Count > 1)
                         {
-                            CompletarControlesInstructor(instructorSeleccionado);
+                            MessageBox.Show("Se encontró más de un instructor con ese nombre. El primero se mostrará en los controles, pero todos incluyendo el primero están en el DataGridView.",
+                                            "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                     else
@@ -207,12 +205,28 @@ namespace GimnasioManager.UI
                     var instructor = _instructorService.ObtenerPorId(id);
                     if (instructor != null)
                     {
+                        // Validar si se intenta cambiar la especialidad y el instructor tiene clases asignadas
+                        var clasesAsignadas = _claseService.ObtenerTodos().Where(c => c.ID_Instructor == id).ToList();
+                        string nuevaEspecialidad = !string.IsNullOrWhiteSpace(textBoxEspecialidadInstructor.Text)
+                            ? textBoxEspecialidadInstructor.Text
+                            : instructor.Especialidad;
+
+                        if (clasesAsignadas.Any() && !string.Equals(instructor.Especialidad, nuevaEspecialidad, StringComparison.OrdinalIgnoreCase))
+                        {
+                            MessageBox.Show(
+                                "Según los requerimientos del proyecto, solo se puede manejar una especialidad por instructor y no existe una tabla de especialidades. " +
+                                "Para cambiar la especialidad, primero debe eliminar todas las clases asociadas a este instructor.",
+                                "Restricción del proyecto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
                         instructor.Nombre = !string.IsNullOrWhiteSpace(comboBoxNombreInstructor.Text) ? comboBoxNombreInstructor.Text : instructor.Nombre;
                         instructor.Apellido = !string.IsNullOrWhiteSpace(textBoxApellidoInstructor.Text) ? textBoxApellidoInstructor.Text : instructor.Apellido;
-                        instructor.Especialidad = !string.IsNullOrWhiteSpace(textBoxEspecialidadInstructor.Text) ? textBoxEspecialidadInstructor.Text : instructor.Especialidad;
+                        instructor.Especialidad = nuevaEspecialidad;
 
-                        _instructorService.Actualizar(instructor);
+                        _instructorService.ActualizarInstructor(instructor);
                         MessageBox.Show("¡Instructor actualizado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
                         LlenarComboBoxInstructores();
                     }
                     else

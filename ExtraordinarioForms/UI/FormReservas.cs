@@ -1,15 +1,9 @@
-﻿using GimnasioManager.Models;
-using GimnasioManager.Services;
-using GimnasioManager.Utils;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using GimnasioManager.Models;        
+using GimnasioManager.Services;       
+using GimnasioManager.Utils;          
+using System;                        
+using System.Linq;                   
+using System.Windows.Forms;   
 
 namespace GimnasioManager.UI
 {
@@ -19,11 +13,13 @@ namespace GimnasioManager.UI
         private int accionActualReserva = 0;
         private readonly ReservaService _reservaService;
         private readonly ClaseService _claseService;
+        readonly MembresiaService _membresiaService;
         public FormReservas()
         {
             InitializeComponent();
             _reservaService = new ReservaService(new DatabaseManager());
             _claseService = new ClaseService(new DatabaseManager());
+            _membresiaService = new MembresiaService(new DatabaseManager());
         }
 
         private void FormReservas_Load(object sender, EventArgs e)
@@ -34,7 +30,6 @@ namespace GimnasioManager.UI
 
         private void ConfigurarControlesReserva(string accion)
         {
-
             textBoxIdMiembroReserva.Enabled = false;
             textBoxIdClaseReserva.Enabled = false;
             dateTimePickerFReserva.Enabled = false;
@@ -53,6 +48,10 @@ namespace GimnasioManager.UI
 
                 case "buscar":
                     textBoxIdReserva.Enabled = true;
+                    break;
+
+                case "buscarporidmiembro":
+                    textBoxIdMiembroReserva.Enabled = true;
                     break;
 
                 case "actualizar":
@@ -74,14 +73,44 @@ namespace GimnasioManager.UI
 
         private void LimpiarControlesReserva()
         {
-            textBoxIdReserva.Clear();
-            textBoxIdMiembroReserva.Clear();
-            textBoxIdClaseReserva.Clear();
-
-            dateTimePickerFReserva.Format = DateTimePickerFormat.Custom;
-            dateTimePickerFReserva.CustomFormat = " ";
+            if (accionActualReserva == 3)
+            {
+                textBoxIdMiembroReserva.Clear();
+            }
+            else
+            {
+                textBoxIdReserva.Clear();
+                textBoxIdMiembroReserva.Clear();
+                textBoxIdClaseReserva.Clear();
+                dateTimePickerFReserva.Format = DateTimePickerFormat.Custom;
+                dateTimePickerFReserva.CustomFormat = " ";
+                dataGridView5.DataSource = null;
+                dataGridView5.Rows.Clear();
+            }
         }
+        private bool ValidarMembresiaActiva(int idMiembro, DateTime fechaReserva)
+        {
+            var membresia = _membresiaService.ObtenerMembresiaPorMiembro(idMiembro);
 
+            if (membresia == null)
+            {
+                MessageBox.Show("El miembro seleccionado no tiene una membresía activa.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            DateTime fechaInicio = membresia.FechaInicio.Date;
+            DateTime fechaFin = membresia.FechaFin.Date;
+            DateTime fechaReservaNormalizada = fechaReserva.Date;
+
+            if (fechaReservaNormalizada >= fechaInicio && fechaReservaNormalizada <= fechaFin)
+            {
+                return true;
+            }
+
+            MessageBox.Show("La reserva no es válida. La fecha de reserva está fuera del rango de vigencia de la membresía del miembro.",
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+        }
         private void RegistrarReserva()
         {
             if (!int.TryParse(textBoxIdMiembroReserva.Text, out int idMiembro))
@@ -104,9 +133,13 @@ namespace GimnasioManager.UI
 
             DateTime fechaReserva = dateTimePickerFReserva.Value;
 
+            if (!ValidarMembresiaActiva(idMiembro, fechaReserva))
+            {
+                return;
+            }
+
             try
             {
-
                 var clase = _claseService.ObtenerPorId(idClase);
                 if (clase == null)
                 {
@@ -114,19 +147,18 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                var reservasExistentes = _reservaService.ObtenerTodos()
-                    .Where(r => r.ID_Miembro == idMiembro && r.FechaReserva == fechaReserva && r.ID_Clase != idClase)
-                    .ToList();
+                var reservaDuplicada = _reservaService.ObtenerTodos()
+                    .Any(r => r.ID_Miembro == idMiembro && r.ID_Clase == idClase && r.FechaReserva.Date == fechaReserva.Date);
 
-                if (reservasExistentes.Any(r => _claseService.ObtenerPorId(r.ID_Clase).Horario == clase.Horario))
+                if (reservaDuplicada)
                 {
-                    MessageBox.Show("No se puede realizar la reserva. El miembro ya tiene una clase reservada en el mismo horario y fecha.",
+                    MessageBox.Show("No se puede realizar la reserva. El miembro ya tiene una reserva para esta clase en la misma fecha.",
                                     "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 var reservasClase = _reservaService.ObtenerTodos()
-                    .Where(r => r.ID_Clase == idClase && r.FechaReserva == fechaReserva)
+                    .Where(r => r.ID_Clase == idClase && r.FechaReserva.Date == fechaReserva.Date)
                     .ToList();
 
                 if (reservasClase.Count >= clase.CapacidadMaxima)
@@ -147,7 +179,6 @@ namespace GimnasioManager.UI
                 MessageBox.Show("¡Reserva registrada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 VerReservas();
-
                 LimpiarControlesReserva();
             }
             catch (Exception ex)
@@ -155,7 +186,6 @@ namespace GimnasioManager.UI
                 MessageBox.Show($"Error al registrar la reserva: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void VerReservas()
         {
             try
@@ -173,6 +203,37 @@ namespace GimnasioManager.UI
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al listar las reservas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BuscarReservasPorIdMiembro()
+        {
+            if (!int.TryParse(textBoxIdMiembroReserva.Text, out int idMiembro))
+            {
+                MessageBox.Show("Por favor, ingrese un ID de miembro válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var reservas = _reservaService.ObtenerTodos()
+                    .Where(r => r.ID_Miembro == idMiembro)
+                    .ToList();
+
+                if (reservas.Any())
+                {
+                    dataGridView5.DataSource = reservas;
+                }
+                else
+                {
+                    MessageBox.Show("No se encontraron reservas para este miembro.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    dataGridView5.DataSource = null;
+                    dataGridView5.Rows.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al buscar las reservas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -213,6 +274,11 @@ namespace GimnasioManager.UI
 
                 DateTime fechaReserva = dateTimePickerFReserva.Value;
 
+                if (!ValidarMembresiaActiva(idMiembro, fechaReserva))
+                {
+                    return;
+                }
+
                 var clase = _claseService.ObtenerPorId(idClase);
                 if (clase == null)
                 {
@@ -220,19 +286,18 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                var reservasExistentes = _reservaService.ObtenerTodos()
-                    .Where(r => r.ID_Miembro == idMiembro && r.FechaReserva == fechaReserva && r.ID_Reserva != idReserva)
-                    .ToList();
+                var reservaDuplicada = _reservaService.ObtenerTodos()
+                    .Any(r => r.ID_Miembro == idMiembro && r.ID_Clase == idClase && r.FechaReserva.Date == fechaReserva.Date && r.ID_Reserva != idReserva);
 
-                if (reservasExistentes.Any(r => _claseService.ObtenerPorId(r.ID_Clase).Horario == clase.Horario))
+                if (reservaDuplicada)
                 {
-                    MessageBox.Show("No se puede actualizar la reserva. El miembro ya tiene una clase reservada en el mismo horario y fecha.",
+                    MessageBox.Show("No se puede actualizar la reserva. El miembro ya tiene una reserva para esta clase en la misma fecha.",
                                     "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 var reservasClase = _reservaService.ObtenerTodos()
-                    .Where(r => r.ID_Clase == idClase && r.FechaReserva == fechaReserva && r.ID_Reserva != idReserva)
+                    .Where(r => r.ID_Clase == idClase && r.FechaReserva.Date == fechaReserva.Date && r.ID_Reserva != idReserva)
                     .ToList();
 
                 if (reservasClase.Count >= clase.CapacidadMaxima)
@@ -258,7 +323,6 @@ namespace GimnasioManager.UI
                 MessageBox.Show($"Error al actualizar la reserva: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void EliminarReserva()
         {
             if (!int.TryParse(textBoxIdReserva.Text, out int idReserva))
@@ -300,7 +364,6 @@ namespace GimnasioManager.UI
             dateTimePickerFReserva.CustomFormat = "dd/MM/yyyy";
         }
 
-
         private void buttonRegistrarReserva_Click_1(object sender, EventArgs e)
         {
             LimpiarControlesReserva();
@@ -315,6 +378,14 @@ namespace GimnasioManager.UI
             accionActualReserva = 2;
             ConfigurarControlesReserva("mostrar");
             GuardarReserva.Text = "Mostrar";
+        }
+
+        private void buttonBuscarReservasPorIdMiembro_Click(object sender, EventArgs e)
+        {
+            LimpiarControlesReserva();
+            accionActualReserva = 3;
+            ConfigurarControlesReserva("buscarporidmiembro");
+            GuardarReserva.Text = "Buscar Reservas";
         }
 
         private void buttonActualizarReserva_Click_1(object sender, EventArgs e)
@@ -340,14 +411,16 @@ namespace GimnasioManager.UI
                 case 1:
                     RegistrarReserva();
                     break;
-
                 case 2:
                     VerReservas();
                     break;
                 case 3:
-                    ActualizarReserva();
+                    BuscarReservasPorIdMiembro();
                     break;
                 case 4:
+                    ActualizarReserva();
+                    break;
+                case 5:
                     EliminarReserva();
                     break;
                 default:
@@ -355,5 +428,6 @@ namespace GimnasioManager.UI
                     break;
             }
         }
+
     }
 }

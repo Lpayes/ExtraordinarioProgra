@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMembresias));
             labelTitulo = new Label();
-            labelIdMiembro = new Label();
+            labelIdMiembresia = new Label();
             comboBoxTipodeMembresia = new ComboBox();
             dataGridViewMembresía = new DataGridView();
             buttonGuardarMembresia = new Button();
@@ -46,6 +46,7 @@
             labelPrecio = new Label();
             labelTMembresia = new Label();
             buttonActualizarMembresia = new Button();
+            buttonBuscarMembresiaPorId = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMembresía).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownPrecio).BeginInit();
             SuspendLayout();
@@ -61,16 +62,16 @@
             labelTitulo.TabIndex = 45;
             labelTitulo.Text = "Gestión de Membresías";
             // 
-            // labelIdMiembro
+            // labelIdMiembresia
             // 
-            labelIdMiembro.AutoSize = true;
-            labelIdMiembro.BackColor = SystemColors.HotTrack;
-            labelIdMiembro.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            labelIdMiembro.Location = new Point(118, 61);
-            labelIdMiembro.Name = "labelIdMiembro";
-            labelIdMiembro.Size = new Size(97, 19);
-            labelIdMiembro.TabIndex = 44;
-            labelIdMiembro.Text = "ID Miembro";
+            labelIdMiembresia.AutoSize = true;
+            labelIdMiembresia.BackColor = SystemColors.HotTrack;
+            labelIdMiembresia.Font = new Font("Arial", 10.2F, FontStyle.Bold);
+            labelIdMiembresia.Location = new Point(118, 61);
+            labelIdMiembresia.Name = "labelIdMiembresia";
+            labelIdMiembresia.Size = new Size(118, 19);
+            labelIdMiembresia.TabIndex = 44;
+            labelIdMiembresia.Text = "ID Miembresia";
             // 
             // comboBoxTipodeMembresia
             // 
@@ -106,7 +107,7 @@
             // 
             buttonEliminarMembresia.BackColor = SystemColors.HotTrack;
             buttonEliminarMembresia.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonEliminarMembresia.Location = new Point(602, 250);
+            buttonEliminarMembresia.Location = new Point(602, 280);
             buttonEliminarMembresia.Name = "buttonEliminarMembresia";
             buttonEliminarMembresia.Size = new Size(126, 61);
             buttonEliminarMembresia.TabIndex = 39;
@@ -118,7 +119,7 @@
             // 
             buttonMostrarMembresias.BackColor = SystemColors.HotTrack;
             buttonMostrarMembresias.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonMostrarMembresias.Location = new Point(602, 116);
+            buttonMostrarMembresias.Location = new Point(602, 79);
             buttonMostrarMembresias.Name = "buttonMostrarMembresias";
             buttonMostrarMembresias.Size = new Size(126, 61);
             buttonMostrarMembresias.TabIndex = 38;
@@ -130,7 +131,7 @@
             // 
             buttonRegistrarMembresia.BackColor = SystemColors.HotTrack;
             buttonRegistrarMembresia.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonRegistrarMembresia.Location = new Point(602, 50);
+            buttonRegistrarMembresia.Location = new Point(602, 12);
             buttonRegistrarMembresia.Name = "buttonRegistrarMembresia";
             buttonRegistrarMembresia.Size = new Size(126, 61);
             buttonRegistrarMembresia.TabIndex = 37;
@@ -162,12 +163,10 @@
             numericUpDownPrecio.Font = new Font("Arial", 9F, FontStyle.Bold);
             numericUpDownPrecio.Increment = new decimal(new int[] { 1, 0, 0, 131072 });
             numericUpDownPrecio.Location = new Point(265, 158);
-            numericUpDownPrecio.Maximum = new decimal(new int[] { 100000, 0, 0, 0 });
-            numericUpDownPrecio.Minimum = new decimal(new int[] { 10000, 0, 0, 0 });
+            numericUpDownPrecio.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
             numericUpDownPrecio.Name = "numericUpDownPrecio";
             numericUpDownPrecio.Size = new Size(288, 25);
             numericUpDownPrecio.TabIndex = 34;
-            numericUpDownPrecio.Value = new decimal(new int[] { 100000, 0, 0, 0 });
             // 
             // textBoxIdMembresia
             // 
@@ -225,7 +224,7 @@
             // 
             buttonActualizarMembresia.BackColor = SystemColors.HotTrack;
             buttonActualizarMembresia.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonActualizarMembresia.Location = new Point(602, 183);
+            buttonActualizarMembresia.Location = new Point(602, 213);
             buttonActualizarMembresia.Name = "buttonActualizarMembresia";
             buttonActualizarMembresia.Size = new Size(126, 61);
             buttonActualizarMembresia.TabIndex = 41;
@@ -233,14 +232,27 @@
             buttonActualizarMembresia.UseVisualStyleBackColor = false;
             buttonActualizarMembresia.Click += buttonActualizarMembresia_Click;
             // 
+            // buttonBuscarMembresiaPorId
+            // 
+            buttonBuscarMembresiaPorId.BackColor = SystemColors.HotTrack;
+            buttonBuscarMembresiaPorId.Font = new Font("Arial", 10.2F, FontStyle.Bold);
+            buttonBuscarMembresiaPorId.Location = new Point(602, 146);
+            buttonBuscarMembresiaPorId.Name = "buttonBuscarMembresiaPorId";
+            buttonBuscarMembresiaPorId.Size = new Size(126, 61);
+            buttonBuscarMembresiaPorId.TabIndex = 46;
+            buttonBuscarMembresiaPorId.Text = "Buscar por Id";
+            buttonBuscarMembresiaPorId.UseVisualStyleBackColor = false;
+            buttonBuscarMembresiaPorId.Click += buttonBuscarMembresiaPorId_Click;
+            // 
             // FormMembresias
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
             ClientSize = new Size(800, 450);
+            Controls.Add(buttonBuscarMembresiaPorId);
             Controls.Add(labelTitulo);
-            Controls.Add(labelIdMiembro);
+            Controls.Add(labelIdMiembresia);
             Controls.Add(comboBoxTipodeMembresia);
             Controls.Add(dataGridViewMembresía);
             Controls.Add(buttonActualizarMembresia);
@@ -268,7 +280,7 @@
         #endregion
 
         private Label labelTitulo;
-        private Label labelIdMiembro;
+        private Label labelIdMiembresia;
         private ComboBox comboBoxTipodeMembresia;
         private DataGridView dataGridViewMembresía;
         private Button buttonGuardarMembresia;
@@ -284,5 +296,6 @@
         private Label labelPrecio;
         private Label labelTMembresia;
         private Button buttonActualizarMembresia;
+        private Button buttonBuscarMembresiaPorId;
     }
 }

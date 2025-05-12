@@ -20,6 +20,12 @@ namespace GimnasioManager.Services
         {
             try
             {
+                if (!_dbManager.TestConnection())
+                {
+                    MessageBox.Show("Error: No se pudo establecer conexión con la base de datos.", "Error de Conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 using var connection = _dbManager.GetConnection();
                 connection.Open();
 

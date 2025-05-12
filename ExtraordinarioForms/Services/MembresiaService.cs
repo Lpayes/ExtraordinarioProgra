@@ -142,6 +142,43 @@ namespace GimnasioManager.Services
             }
         }
 
+        public Membresia ObtenerMembresiaPorMiembro(int idMiembro)
+{
+    try
+    {
+        using var connection = _dbManager.GetConnection();
+        connection.Open();
+
+        // Consulta para obtener los datos de la membresía asociada al miembro
+        var command = new SqlCommand(@"
+            SELECT m.ID_Membresia, m.TipoMembresia, m.Precio, m.FechaInicio, m.FechaFin
+            FROM Membresias m
+            JOIN Miembros mi ON mi.ID_Membresia = m.ID_Membresia
+            WHERE mi.ID_Miembro = @ID_Miembro", connection);
+
+        command.Parameters.AddWithValue("@ID_Miembro", idMiembro);
+
+        using var reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            return new Membresia
+            {
+                ID_Membresia = reader.GetInt32(0),
+                TipoMembresia = reader.GetString(1),
+                Precio = reader.GetDecimal(2),
+                FechaInicio = reader.GetDateTime(3),
+                FechaFin = reader.GetDateTime(4)
+            };
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error al obtener la membresía por miembro: {ex.Message}");
+    }
+
+    return null; // Si no se encuentra la membresía, devolver null
+}
+
         // Eliminar una membresía por ID  
         public void Eliminar(int id)
         {

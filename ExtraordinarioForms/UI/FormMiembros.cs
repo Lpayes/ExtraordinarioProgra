@@ -2,6 +2,9 @@
 using GimnasioManager.Models;
 using GimnasioManager.Utils;
 using System.Text.RegularExpressions;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace GimnasioManager.UI
 {
@@ -12,11 +15,13 @@ namespace GimnasioManager.UI
 
         private readonly MiembroService _miembroService;
         private readonly MembresiaService _membresiaService;
+        private readonly ReservaService _reservaService;
         public FormMiembros()
         {
             InitializeComponent();
             _miembroService = new MiembroService(new DatabaseManager());
             _membresiaService = new MembresiaService(new DatabaseManager());
+            _reservaService = new ReservaService(new DatabaseManager());
         }
 
         private void FormMiembros_Load(object sender, EventArgs e)
@@ -45,7 +50,6 @@ namespace GimnasioManager.UI
 
         private void ConfigurarControlesMiembro(string accion)
         {
-
             comboBoxNombreMiembro.Enabled = false;
             textBoxApellidoMiembro.Enabled = false;
             dateTimePickerFNacimeinto.Enabled = false;
@@ -65,7 +69,6 @@ namespace GimnasioManager.UI
                     break;
 
                 case "mostrar":
-
                     break;
 
                 case "buscar":
@@ -79,7 +82,6 @@ namespace GimnasioManager.UI
                     dateTimePickerFNacimeinto.Enabled = true;
                     textBoxEmailMiembro.Enabled = true;
                     textBoxTelefonoMiembro.Enabled = true;
-                    textBoxIdMembresiaMiembro.Enabled = true;
                     break;
 
                 case "eliminar":
@@ -104,14 +106,11 @@ namespace GimnasioManager.UI
             comboBoxNombreMiembro.Text = miembro.Nombre;
             textBoxApellidoMiembro.Text = miembro.Apellido;
 
-            if (miembro.FechaNacimiento != DateTime.MinValue)
-            {
-                dateTimePickerFNacimeinto.Value = miembro.FechaNacimiento;
-            }
-            else
-            {
-                dateTimePickerFNacimeinto.Value = DateTime.Today;
-            }
+            dateTimePickerFNacimeinto.Format = DateTimePickerFormat.Short;
+            dateTimePickerFNacimeinto.CustomFormat = "dd/MM/yyyy";
+            dateTimePickerFNacimeinto.Value = miembro.FechaNacimiento != DateTime.MinValue
+                ? miembro.FechaNacimiento
+                : DateTime.Today;
 
             textBoxEmailMiembro.Text = miembro.Email;
             textBoxTelefonoMiembro.Text = miembro.Telefono;
@@ -128,14 +127,15 @@ namespace GimnasioManager.UI
             textBoxTelefonoMiembro.Clear();
             textBoxIdMembresiaMiembro.Clear();
 
-
             dateTimePickerFNacimeinto.Format = DateTimePickerFormat.Custom;
             dateTimePickerFNacimeinto.CustomFormat = " ";
+
+            dataGridViewMiembro.DataSource = null;
+            dataGridViewMiembro.Rows.Clear();
         }
 
         private void RegistrarMiembro()
         {
-            // Validar campos obligatorios
             if (string.IsNullOrWhiteSpace(comboBoxNombreMiembro.Text))
             {
                 MessageBox.Show("El campo 'Nombre' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -154,6 +154,23 @@ namespace GimnasioManager.UI
                 return;
             }
 
+            if (dateTimePickerFNacimeinto.CustomFormat == " ")
+            {
+                MessageBox.Show("Por favor, seleccione una fecha de nacimiento.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var fechaNacimiento = dateTimePickerFNacimeinto.Value;
+            var hoy = DateTime.Today;
+            int edad = hoy.Year - fechaNacimiento.Year;
+            if (fechaNacimiento > hoy.AddYears(-edad)) edad--;
+
+            if (edad < 14)
+            {
+                MessageBox.Show("Solo se pueden registrar personas mayores o iguales a 14 años.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(textBoxEmailMiembro.Text))
             {
                 MessageBox.Show("El campo 'Email' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -165,7 +182,6 @@ namespace GimnasioManager.UI
                 MessageBox.Show("El campo 'Teléfono' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
 
             if (!Regex.IsMatch(textBoxTelefonoMiembro.Text, @"^\d{8}$"))
             {
@@ -195,7 +211,6 @@ namespace GimnasioManager.UI
                 }
             }
 
-            // Crear el objeto Miembro
             var miembro = new Miembro
             {
                 Nombre = comboBoxNombreMiembro.Text,
@@ -208,7 +223,6 @@ namespace GimnasioManager.UI
 
             try
             {
-
                 _miembroService.Crear(miembro);
                 MessageBox.Show("¡Miembro registrado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LlenarComboBoxMiembros();
@@ -259,6 +273,13 @@ namespace GimnasioManager.UI
                         {
                             CompletarControlesMiembro(miembroSeleccionado);
                         }
+
+                        if (miembros.Count > 1)
+                        {
+                            MessageBox.Show(
+                                "El primer miembro encontrado con ese nombre se muestra en los controles, pero todos los miembros encontrados están listados en la tabla.",
+                                "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                     else
                     {
@@ -282,11 +303,9 @@ namespace GimnasioManager.UI
             {
                 try
                 {
-
                     var miembro = _miembroService.ObtenerPorId(id);
                     if (miembro != null)
                     {
-
                         miembro.Nombre = !string.IsNullOrWhiteSpace(comboBoxNombreMiembro.Text) ? comboBoxNombreMiembro.Text : miembro.Nombre;
                         miembro.Apellido = !string.IsNullOrWhiteSpace(textBoxApellidoMiembro.Text) ? textBoxApellidoMiembro.Text : miembro.Apellido;
                         miembro.FechaNacimiento = dateTimePickerFNacimeinto.CustomFormat != " " ? dateTimePickerFNacimeinto.Value : miembro.FechaNacimiento;
@@ -365,6 +384,14 @@ namespace GimnasioManager.UI
             {
                 if (int.TryParse(textBoxIdMiembro.Text, out int id))
                 {
+                    var reservas = _reservaService.ObtenerTodos().Where(r => r.ID_Miembro == id).ToList();
+                    if (reservas.Any())
+                    {
+                        MessageBox.Show("No se puede eliminar el miembro porque tiene reservas asociadas. Elimine primero todas las reservas de este miembro.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        contadorEliminarMiembro = 0;
+                        return;
+                    }
+
                     _miembroService.Eliminar(id);
 
                     contadorEliminarMiembro = 0;
@@ -378,7 +405,6 @@ namespace GimnasioManager.UI
             dateTimePickerFNacimeinto.Format = DateTimePickerFormat.Short;
             dateTimePickerFNacimeinto.CustomFormat = "dd/MM/yyyy";
         }
-
 
         private void buttonRegistrarMiembro_Click_1(object sender, EventArgs e)
         {
@@ -394,7 +420,6 @@ namespace GimnasioManager.UI
             accionActualMiembro = 2;
             ConfigurarControlesMiembro("mostrar");
             buttonGuardarMiembro.Text = "Mostrar";
-            ListarMiembros();
         }
 
         private void buttonBuscarMiembro_Click_1(object sender, EventArgs e)
@@ -444,10 +469,7 @@ namespace GimnasioManager.UI
                 default:
                     MessageBox.Show("Seleccione una acción válida antes de guardar.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     break;
-
-
             }
         }
-
     }
 }

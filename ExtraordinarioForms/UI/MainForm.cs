@@ -1,12 +1,5 @@
 ﻿using GimnasioManager.UI;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GimnasioManager.UI
@@ -27,7 +20,7 @@ namespace GimnasioManager.UI
         private void buttonInstructor_Click(object sender, EventArgs e)
         {
             FormInstructores formInstructor = new FormInstructores();
-            formInstructor.Show(); 
+            formInstructor.Show();
         }
 
         private void buttonClase_Click(object sender, EventArgs e)
@@ -40,7 +33,6 @@ namespace GimnasioManager.UI
         {
             FormMembresias formMembresia = new FormMembresias();
             formMembresia.Show();
-
         }
 
         private void buttonReserva_Click(object sender, EventArgs e)

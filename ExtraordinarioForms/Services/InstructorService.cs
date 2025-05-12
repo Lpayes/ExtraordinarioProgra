@@ -9,7 +9,13 @@ namespace GimnasioManager.Services
     public class InstructorService
     {
         private readonly DatabaseManager _dbManager;
-
+        public static readonly List<string> EspecialidadesPermitidas = new List<string>
+           {
+               "Yoga",
+               "Spinning",
+               "CrossFit",
+               "Boxeo"
+           };
         public InstructorService(DatabaseManager dbManager)
         {
             _dbManager = dbManager;
@@ -19,15 +25,26 @@ namespace GimnasioManager.Services
         {
             try
             {
+                if (!EspecialidadesPermitidas.Contains(instructor.Especialidad, StringComparer.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("No se necesita un instructor con esta especialidad por el momento. Solo necesitamos personas con las siguientes especialidades: Yoga, Spinning, CrossFit, Boxeo.",
+                                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 using var connection = _dbManager.GetConnection();
                 connection.Open();
-                var command = new SqlCommand("INSERT INTO Instructores (Nombre, Apellido, Especialidad) VALUES (@Nombre, @Apellido, @Especialidad); SELECT SCOPE_IDENTITY();", connection);
+
+                var command = new SqlCommand(
+                    "INSERT INTO Instructores (Nombre, Apellido, Especialidad) " +
+                    "VALUES (@Nombre, @Apellido, @Especialidad); SELECT SCOPE_IDENTITY();", connection);
+
                 command.Parameters.AddWithValue("@Nombre", instructor.Nombre);
                 command.Parameters.AddWithValue("@Apellido", instructor.Apellido);
                 command.Parameters.AddWithValue("@Especialidad", instructor.Especialidad);
 
                 instructor.ID_Instructor = Convert.ToInt32(command.ExecuteScalar());
-                MessageBox.Show($"Instructor creado con ID: {instructor.ID_Instructor}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"Instructor creado con éxito. ID: {instructor.ID_Instructor}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -42,6 +59,7 @@ namespace GimnasioManager.Services
             {
                 using var connection = _dbManager.GetConnection();
                 connection.Open();
+
                 var command = new SqlCommand("SELECT ID_Instructor, Nombre, Apellido, Especialidad FROM Instructores", connection);
 
                 using var reader = command.ExecuteReader();
@@ -62,14 +80,16 @@ namespace GimnasioManager.Services
             }
             return instructores;
         }
-
         public Instructor ObtenerPorId(int id)
         {
             try
             {
                 using var connection = _dbManager.GetConnection();
                 connection.Open();
-                var command = new SqlCommand("SELECT ID_Instructor, Nombre, Apellido, Especialidad FROM Instructores WHERE ID_Instructor = @Id", connection);
+
+                var command = new SqlCommand(
+                    "SELECT ID_Instructor, Nombre, Apellido, Especialidad FROM Instructores WHERE ID_Instructor = @Id", connection);
+
                 command.Parameters.AddWithValue("@Id", id);
 
                 using var reader = command.ExecuteReader();
@@ -91,24 +111,35 @@ namespace GimnasioManager.Services
             return null;
         }
 
-        public void Actualizar(Instructor instructor)
+        public void ActualizarInstructor(Instructor instructor)
         {
             try
             {
+                if (!EspecialidadesPermitidas.Contains(instructor.Especialidad, StringComparer.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("No se necesita un instructor con esta especialidad por el momento. Solo necesitamos personas con las siguientes especialidades: Yoga, Spinning, CrossFit, Boxeo.",
+                                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 using var connection = _dbManager.GetConnection();
                 connection.Open();
-                var command = new SqlCommand("UPDATE Instructores SET Nombre = @Nombre, Apellido = @Apellido, Especialidad = @Especialidad WHERE ID_Instructor = @ID_Instructor", connection);
+
+                var command = new SqlCommand(
+                    "UPDATE Instructores SET Nombre = @Nombre, Apellido = @Apellido, Especialidad = @Especialidad " +
+                    "WHERE ID_Instructor = @ID_Instructor", connection);
+
                 command.Parameters.AddWithValue("@ID_Instructor", instructor.ID_Instructor);
                 command.Parameters.AddWithValue("@Nombre", instructor.Nombre);
                 command.Parameters.AddWithValue("@Apellido", instructor.Apellido);
                 command.Parameters.AddWithValue("@Especialidad", instructor.Especialidad);
 
                 int rows = command.ExecuteNonQuery();
-                MessageBox.Show(rows > 0 ? "Instructor actualizado." : "No se encontró el instructor para actualizar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(rows > 0 ? "Instructor actualizado con éxito." : "No se encontró el instructor a actualizar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al actualizar instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al actualizar el instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

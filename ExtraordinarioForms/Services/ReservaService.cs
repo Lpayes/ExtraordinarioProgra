@@ -158,5 +158,10 @@ namespace GimnasioManager.Services
                 MessageBox.Show($"Error al eliminar reserva: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        internal object ObtenerMiembroPorId(int idMiembro)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -44,6 +44,7 @@
             dateTimePickerFReserva = new DateTimePicker();
             labelIdClase = new Label();
             labelIdMiembro = new Label();
+            buttonBuscarReservasPorIdMiembro = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView5).BeginInit();
             SuspendLayout();
             // 
@@ -106,7 +107,7 @@
             // 
             buttonEliminarReserva.BackColor = SystemColors.HotTrack;
             buttonEliminarReserva.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonEliminarReserva.Location = new Point(575, 264);
+            buttonEliminarReserva.Location = new Point(608, 286);
             buttonEliminarReserva.Name = "buttonEliminarReserva";
             buttonEliminarReserva.Size = new Size(126, 61);
             buttonEliminarReserva.TabIndex = 39;
@@ -130,7 +131,7 @@
             // 
             buttonMostrarReservas.BackColor = SystemColors.HotTrack;
             buttonMostrarReservas.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonMostrarReservas.Location = new Point(575, 133);
+            buttonMostrarReservas.Location = new Point(608, 85);
             buttonMostrarReservas.Name = "buttonMostrarReservas";
             buttonMostrarReservas.Size = new Size(126, 61);
             buttonMostrarReservas.TabIndex = 36;
@@ -142,7 +143,7 @@
             // 
             buttonActualizarReserva.BackColor = SystemColors.HotTrack;
             buttonActualizarReserva.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonActualizarReserva.Location = new Point(575, 198);
+            buttonActualizarReserva.Location = new Point(608, 219);
             buttonActualizarReserva.Name = "buttonActualizarReserva";
             buttonActualizarReserva.Size = new Size(126, 61);
             buttonActualizarReserva.TabIndex = 35;
@@ -154,7 +155,7 @@
             // 
             buttonRegistrarReserva.BackColor = SystemColors.HotTrack;
             buttonRegistrarReserva.Font = new Font("Arial", 10.2F, FontStyle.Bold);
-            buttonRegistrarReserva.Location = new Point(575, 71);
+            buttonRegistrarReserva.Location = new Point(608, 18);
             buttonRegistrarReserva.Name = "buttonRegistrarReserva";
             buttonRegistrarReserva.Size = new Size(126, 61);
             buttonRegistrarReserva.TabIndex = 34;
@@ -204,6 +205,18 @@
             labelIdMiembro.TabIndex = 30;
             labelIdMiembro.Text = "ID Miembro";
             // 
+            // buttonBuscarReservasPorIdMiembro
+            // 
+            buttonBuscarReservasPorIdMiembro.BackColor = SystemColors.HotTrack;
+            buttonBuscarReservasPorIdMiembro.Font = new Font("Arial", 10.2F, FontStyle.Bold);
+            buttonBuscarReservasPorIdMiembro.Location = new Point(608, 152);
+            buttonBuscarReservasPorIdMiembro.Name = "buttonBuscarReservasPorIdMiembro";
+            buttonBuscarReservasPorIdMiembro.Size = new Size(126, 61);
+            buttonBuscarReservasPorIdMiembro.TabIndex = 45;
+            buttonBuscarReservasPorIdMiembro.Text = "Buscar Reservas por Id Miembro";
+            buttonBuscarReservasPorIdMiembro.UseVisualStyleBackColor = false;
+            buttonBuscarReservasPorIdMiembro.Click += buttonBuscarReservasPorIdMiembro_Click;
+            // 
             // FormReservas
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -211,6 +224,7 @@
             BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(800, 450);
+            Controls.Add(buttonBuscarReservasPorIdMiembro);
             Controls.Add(labelTitulo);
             Controls.Add(textBoxIdClaseReserva);
             Controls.Add(textBoxIdMiembroReserva);
@@ -253,5 +267,6 @@
         private DateTimePicker dateTimePickerFReserva;
         private Label labelIdClase;
         private Label labelIdMiembro;
+        private Button buttonBuscarReservasPorIdMiembro;
     }
 }

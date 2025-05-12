@@ -2,13 +2,7 @@
 using GimnasioManager.Services;
 using GimnasioManager.Utils;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GimnasioManager.UI
@@ -18,32 +12,22 @@ namespace GimnasioManager.UI
         private int contadorEliminarClase = 0;
         private int accionActualClase = 0;
         private readonly ClaseService _claseService;
+        private readonly InstructorService _instructorService;
+        private readonly ReservaService _reservaService;
+
         public FormClases()
         {
             InitializeComponent();
             _claseService = new ClaseService(new DatabaseManager());
+            _instructorService = new InstructorService(new DatabaseManager());
+            _reservaService = new ReservaService(new DatabaseManager());
         }
 
         private void FormClases_Load(object sender, EventArgs e)
         {
-            LlenarComboBoxClases();
-        }
-
-        private void LlenarComboBoxClases()
-        {
             comboBoxNombreClase.Items.Clear();
-            var clases = _claseService.ObtenerTodos();
-            if (clases != null && clases.Any())
-            {
-                foreach (var clase in clases)
-                {
-                    comboBoxNombreClase.Items.Add(clase.NombreClase);
-                }
-            }
-            else
-            {
-                MessageBox.Show("No se encontraron clases.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            comboBoxNombreClase.Items.AddRange(new object[] { "Yoga", "Spinning", "CrossFit", "Boxeo" });
+            comboBoxNombreClase.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         private void ConfigurarControlesClase(string accion)
@@ -62,14 +46,11 @@ namespace GimnasioManager.UI
                     maskedTextBoxHorario.Enabled = true;
                     textBoxIdInstructorClase.Enabled = true;
                     break;
-
                 case "mostrar":
                     break;
-
                 case "buscar":
                     comboBoxNombreClase.Enabled = true;
                     break;
-
                 case "actualizar":
                     textBoxIdClase.Enabled = true;
                     comboBoxNombreClase.Enabled = true;
@@ -77,11 +58,9 @@ namespace GimnasioManager.UI
                     maskedTextBoxHorario.Enabled = true;
                     textBoxIdInstructorClase.Enabled = true;
                     break;
-
                 case "eliminar":
                     textBoxIdClase.Enabled = true;
                     break;
-
                 default:
                     MessageBox.Show("Acción no reconocida.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     break;
@@ -111,13 +90,14 @@ namespace GimnasioManager.UI
             numericUpDownCapacidadMaxima.Value = 0;
             maskedTextBoxHorario.Clear();
             textBoxIdInstructorClase.Clear();
+            dataGridViewClase.DataSource = null;
         }
 
         private void RegistrarClase()
         {
-            if (string.IsNullOrWhiteSpace(comboBoxNombreClase.Text))
+            if (comboBoxNombreClase.SelectedIndex == -1)
             {
-                MessageBox.Show("El campo 'Nombre de la Clase' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Por favor, seleccione un nombre de clase.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -139,20 +119,36 @@ namespace GimnasioManager.UI
                 return;
             }
 
+            var instructor = _instructorService.ObtenerPorId(idInstructor);
+            if (instructor == null)
+            {
+                MessageBox.Show("No se encontró un instructor con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string nombreClase = comboBoxNombreClase.SelectedItem.ToString();
+            if (!string.Equals(instructor.Especialidad, nombreClase, StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show($"El instructor no tiene la especialidad requerida para esta clase. Especialidad del instructor: {instructor.Especialidad}.",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             var clases = _claseService.ObtenerTodos();
             var conflicto = clases.Any(c => c.ID_Instructor == idInstructor &&
-                                             Math.Abs((c.Horario - horario).TotalMinutes) < 60);
+                                             (horario >= c.Horario && horario < c.Horario.Add(TimeSpan.FromHours(1)) ||
+                                              c.Horario >= horario && c.Horario < horario.Add(TimeSpan.FromHours(1))));
 
             if (conflicto)
             {
-                MessageBox.Show("El instructor ya tiene una clase asignada en un horario conflictivo.",
+                MessageBox.Show("El instructor ya tiene una clase asignada en este horario o en un horario que se superpone (duración de 1 hora).",
                                  "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             var clase = new Clase
             {
-                NombreClase = comboBoxNombreClase.Text,
+                NombreClase = nombreClase,
                 Horario = horario,
                 CapacidadMaxima = (int)numericUpDownCapacidadMaxima.Value,
                 ID_Instructor = idInstructor
@@ -162,7 +158,6 @@ namespace GimnasioManager.UI
             {
                 _claseService.Crear(clase);
                 MessageBox.Show("¡Clase registrada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LlenarComboBoxClases();
                 LimpiarControlesClase();
             }
             catch (Exception ex)
@@ -210,6 +205,13 @@ namespace GimnasioManager.UI
                         {
                             CompletarControlesClase(claseSeleccionada);
                         }
+
+                        if (clases.Count > 1)
+                        {
+                            MessageBox.Show(
+                                "El primer resultado se muestra en los controles, pero todas las clases encontradas están listadas en la tabla.",
+                                "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                     else
                     {
@@ -229,18 +231,24 @@ namespace GimnasioManager.UI
 
         private void ActualizarClase()
         {
-            if (!int.TryParse(textBoxIdClase.Text, out int id))
+            if (!int.TryParse(textBoxIdClase.Text, out int idClase))
             {
-                MessageBox.Show("Por favor, ingrese un ID válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Por favor, ingrese un ID de clase válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-                var clase = _claseService.ObtenerPorId(id);
+                var clase = _claseService.ObtenerPorId(idClase);
                 if (clase == null)
                 {
                     MessageBox.Show("No se encontró una clase con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (comboBoxNombreClase.SelectedIndex == -1)
+                {
+                    MessageBox.Show("Por favor, seleccione un nombre de clase.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -250,30 +258,47 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                if (int.TryParse(textBoxIdInstructorClase.Text, out int idInstructor))
+                if (!int.TryParse(textBoxIdInstructorClase.Text, out int idInstructor))
                 {
-                    var clases = _claseService.ObtenerTodos();
-                    var conflicto = clases.Any(c => c.ID_Instructor == idInstructor &&
-                                                     c.ID_Clase != id &&
-                                                     Math.Abs((c.Horario - horario).TotalMinutes) < 60);
-
-                    if (conflicto)
-                    {
-                        MessageBox.Show("El instructor ya tiene una clase asignada en un horario conflictivo.",
-                                "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    clase.ID_Instructor = idInstructor;
+                    MessageBox.Show("Por favor, ingrese un ID de instructor válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
-                clase.NombreClase = !string.IsNullOrWhiteSpace(comboBoxNombreClase.Text) ? comboBoxNombreClase.Text : clase.NombreClase;
+                var instructor = _instructorService.ObtenerPorId(idInstructor);
+                if (instructor == null)
+                {
+                    MessageBox.Show("No se encontró un instructor con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                string nombreClase = comboBoxNombreClase.SelectedItem.ToString();
+                if (!string.Equals(instructor.Especialidad, nombreClase, StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show($"El instructor no tiene la especialidad requerida para esta clase. Especialidad del instructor: {instructor.Especialidad}.",
+                                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var clases = _claseService.ObtenerTodos();
+                var conflicto = clases.Any(c => c.ID_Instructor == idInstructor &&
+                                                 c.ID_Clase != idClase &&
+                                                 (horario >= c.Horario && horario < c.Horario.Add(TimeSpan.FromHours(1)) ||
+                                                  c.Horario >= horario && c.Horario < horario.Add(TimeSpan.FromHours(1))));
+
+                if (conflicto)
+                {
+                    MessageBox.Show("El instructor ya tiene una clase asignada en este horario o en un horario que se superpone (duración de 1 hora).",
+                                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                clase.NombreClase = nombreClase;
                 clase.Horario = horario;
                 clase.CapacidadMaxima = numericUpDownCapacidadMaxima.Value > 0 ? (int)numericUpDownCapacidadMaxima.Value : clase.CapacidadMaxima;
+                clase.ID_Instructor = idInstructor;
 
                 _claseService.Actualizar(clase);
                 MessageBox.Show("¡Clase actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LlenarComboBoxClases();
                 LimpiarControlesClase();
             }
             catch (Exception ex)
@@ -310,10 +335,17 @@ namespace GimnasioManager.UI
             {
                 if (int.TryParse(textBoxIdClase.Text, out int id))
                 {
+                    var reservas = _reservaService.ObtenerTodos().Where(r => r.ID_Clase == id).ToList();
+                    if (reservas.Any())
+                    {
+                        MessageBox.Show("No se puede eliminar la clase porque tiene reservas asociadas. Elimine primero todas las reservas de esta clase.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        contadorEliminarClase = 0;
+                        return;
+                    }
+
                     _claseService.Eliminar(id);
                     MessageBox.Show("¡Clase eliminada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     contadorEliminarClase = 0;
-                    LlenarComboBoxClases();
                 }
             }
         }
