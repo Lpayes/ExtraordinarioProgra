@@ -134,108 +134,136 @@ namespace GimnasioManager.UI
             dataGridViewMiembro.Rows.Clear();
         }
 
-        private void RegistrarMiembro()
-        {
-            if (string.IsNullOrWhiteSpace(comboBoxNombreMiembro.Text))
-            {
-                MessageBox.Show("El campo 'Nombre' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+       private void RegistrarMiembro()
+{
+    if (string.IsNullOrWhiteSpace(comboBoxNombreMiembro.Text))
+    {
+        MessageBox.Show("El campo 'Nombre' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            if (string.IsNullOrWhiteSpace(textBoxApellidoMiembro.Text))
-            {
-                MessageBox.Show("El campo 'Apellido' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+    // Validar que el nombre no contenga números
+    if (comboBoxNombreMiembro.Text.Any(char.IsDigit))
+    {
+        MessageBox.Show("El nombre no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            if (dateTimePickerFNacimeinto.CustomFormat == " ")
-            {
-                MessageBox.Show("Por favor, seleccione una fecha de nacimiento.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+    if (string.IsNullOrWhiteSpace(textBoxApellidoMiembro.Text))
+    {
+        MessageBox.Show("El campo 'Apellido' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            var fechaNacimiento = dateTimePickerFNacimeinto.Value;
-            var hoy = DateTime.Today;
-            int edad = hoy.Year - fechaNacimiento.Year;
-            if (fechaNacimiento > hoy.AddYears(-edad)) edad--;
+    // Validar que el apellido no contenga números
+    if (textBoxApellidoMiembro.Text.Any(char.IsDigit))
+    {
+        MessageBox.Show("El apellido no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            if (edad < 14)
-            {
-                MessageBox.Show("Solo se pueden registrar personas mayores o iguales a 14 años.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+    if (dateTimePickerFNacimeinto.CustomFormat == " ")
+    {
+        MessageBox.Show("Por favor, seleccione una fecha de nacimiento.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            if (string.IsNullOrWhiteSpace(textBoxEmailMiembro.Text))
-            {
-                MessageBox.Show("El campo 'Email' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+    var fechaNacimiento = dateTimePickerFNacimeinto.Value;
+    var hoy = DateTime.Today;
+    int edad = hoy.Year - fechaNacimiento.Year;
+    if (fechaNacimiento > hoy.AddYears(-edad)) edad--;
 
-            if (string.IsNullOrWhiteSpace(textBoxTelefonoMiembro.Text))
-            {
-                MessageBox.Show("El campo 'Teléfono' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+    if (edad < 14)
+    {
+        MessageBox.Show("Solo se pueden registrar personas mayores o iguales a 14 años.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            if (!Regex.IsMatch(textBoxTelefonoMiembro.Text, @"^\d{8}$"))
-            {
-                MessageBox.Show("El teléfono debe contener exactamente 8 dígitos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+    if (string.IsNullOrWhiteSpace(textBoxEmailMiembro.Text))
+    {
+        MessageBox.Show("El campo 'Email' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            if (!Regex.IsMatch(textBoxEmailMiembro.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            {
-                MessageBox.Show("El correo electrónico no tiene un formato válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+    if (!Regex.IsMatch(textBoxEmailMiembro.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+    {
+        MessageBox.Show("El correo electrónico no tiene un formato válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
 
-            if (string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text))
-            {
-                MessageBox.Show("El campo 'ID de Membresía' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+    // Validar que el email no esté repetido
+    if (_miembroService.ObtenerTodos().Any(m => m.Email.Equals(textBoxEmailMiembro.Text, StringComparison.OrdinalIgnoreCase)))
+    {
+        MessageBox.Show("El correo electrónico ya está registrado para otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
 
-            if (!int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
-            {
-                MessageBox.Show("El ID de Membresía debe ser un número válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+    if (string.IsNullOrWhiteSpace(textBoxTelefonoMiembro.Text))
+    {
+        MessageBox.Show("El campo 'Teléfono' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            var membresia = _membresiaService.ObtenerPorId(idMembresia);
-            if (membresia == null)
-            {
-                MessageBox.Show("La membresía especificada no existe.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+    if (!Regex.IsMatch(textBoxTelefonoMiembro.Text, @"^\d{8}$"))
+    {
+        MessageBox.Show("El teléfono debe contener exactamente 8 dígitos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
 
-            // Validar que no se registre un miembro con un ID ya existente  
-            if (_miembroService.ObtenerTodos().Any(m => m.ID_Membresia == idMembresia))
-            {
-                MessageBox.Show("Cada miembro tiene su propia membresía y esta ya está asignada a otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+    // Validar que el teléfono no esté repetido
+    if (_miembroService.ObtenerTodos().Any(m => m.Telefono == textBoxTelefonoMiembro.Text))
+    {
+        MessageBox.Show("El teléfono ya está registrado para otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
 
-            var miembro = new Miembro
-            {
-                Nombre = comboBoxNombreMiembro.Text,
-                Apellido = textBoxApellidoMiembro.Text,
-                FechaNacimiento = dateTimePickerFNacimeinto.Value,
-                Email = textBoxEmailMiembro.Text,
-                Telefono = textBoxTelefonoMiembro.Text,
-                ID_Membresia = idMembresia
-            };
+    if (string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text))
+    {
+        MessageBox.Show("El campo 'ID de Membresía' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
 
-            try
-            {
-                _miembroService.Crear(miembro);
-                MessageBox.Show("¡Miembro registrado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LlenarComboBoxMiembros();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al registrar el miembro: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+    if (!int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
+    {
+        MessageBox.Show("El ID de Membresía debe ser un número válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
+
+    var membresia = _membresiaService.ObtenerPorId(idMembresia);
+    if (membresia == null)
+    {
+        MessageBox.Show("La membresía especificada no existe.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
+
+    // Validar que no se registre un miembro con un ID ya existente  
+    if (_miembroService.ObtenerTodos().Any(m => m.ID_Membresia == idMembresia))
+    {
+        MessageBox.Show("Cada miembro tiene su propia membresía y esta ya está asignada a otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
+
+    var miembro = new Miembro
+    {
+        Nombre = comboBoxNombreMiembro.Text,
+        Apellido = textBoxApellidoMiembro.Text,
+        FechaNacimiento = dateTimePickerFNacimeinto.Value,
+        Email = textBoxEmailMiembro.Text,
+        Telefono = textBoxTelefonoMiembro.Text,
+        ID_Membresia = idMembresia
+    };
+
+    try
+    {
+        _miembroService.Crear(miembro);
+        MessageBox.Show("¡Miembro registrado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        ListarMiembros(); // Solo actualiza el DataGridView
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Error al registrar el miembro: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
 
         private void ListarMiembros()
         {
@@ -248,6 +276,8 @@ namespace GimnasioManager.UI
                 }
                 else
                 {
+                    dataGridViewMiembro.DataSource = null;
+                    dataGridViewMiembro.Rows.Clear();
                     MessageBox.Show("No se encontraron miembros.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -303,97 +333,164 @@ namespace GimnasioManager.UI
 
         private void ActualizarMiembro()
         {
-            if (int.TryParse(textBoxIdMiembro.Text, out int id))
-            {
-                try
-                {
-                    var miembro = _miembroService.ObtenerPorId(id);
-                    if (miembro != null)
-                    {
-                        miembro.Nombre = !string.IsNullOrWhiteSpace(comboBoxNombreMiembro.Text) ? comboBoxNombreMiembro.Text : miembro.Nombre;
-                        miembro.Apellido = !string.IsNullOrWhiteSpace(textBoxApellidoMiembro.Text) ? textBoxApellidoMiembro.Text : miembro.Apellido;
-                        miembro.FechaNacimiento = dateTimePickerFNacimeinto.CustomFormat != " " ? dateTimePickerFNacimeinto.Value : miembro.FechaNacimiento;
-                        miembro.Email = !string.IsNullOrWhiteSpace(textBoxEmailMiembro.Text) ? textBoxEmailMiembro.Text : miembro.Email;
-                        miembro.Telefono = !string.IsNullOrWhiteSpace(textBoxTelefonoMiembro.Text) ? textBoxTelefonoMiembro.Text : miembro.Telefono;
-
-                        if (!string.IsNullOrWhiteSpace(textBoxTelefonoMiembro.Text) && !Regex.IsMatch(textBoxTelefonoMiembro.Text, @"^\d{8}$"))
-                        {
-                            MessageBox.Show("El teléfono debe contener exactamente 8 dígitos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text) && int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
-                        {
-                            if (idMembresia != miembro.ID_Membresia)
-                            {
-                                MessageBox.Show("El ID de Membresía no se puede actualizar porque está vinculado al miembro.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                return;
-                            }
-                        }
-
-                        _miembroService.Actualizar(miembro);
-                        MessageBox.Show("¡Miembro actualizado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LlenarComboBoxMiembros();
-                    }
-                    else
-                    {
-                        MessageBox.Show("No se encontró un miembro con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error al actualizar el miembro: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else
+            if (!int.TryParse(textBoxIdMiembro.Text, out int id))
             {
                 MessageBox.Show("Por favor, ingrese un ID válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-        }
-        private void EliminarMiembro()
-        {
-            if (contadorEliminarMiembro == 0)
-            {
-                if (int.TryParse(textBoxIdMiembro.Text, out int id))
-                {
-                    var miembro = _miembroService.ObtenerPorId(id);
-                    if (miembro != null)
-                    {
-                        CompletarControlesMiembro(miembro);
 
-                        MessageBox.Show($"Se ha encontrado al miembro: {miembro.Nombre}. Haz clic en el botón 'Eliminar' para confirmar la eliminación.",
-                                        "Confirmar eliminación", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        contadorEliminarMiembro++;
-                    }
-                    else
-                    {
-                        MessageBox.Show("No se encontró un miembro con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Por favor, ingrese un ID válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
-            else
+            try
             {
-                if (int.TryParse(textBoxIdMiembro.Text, out int id))
+                var miembro = _miembroService.ObtenerPorId(id);
+                if (miembro == null)
                 {
-                    var reservas = _reservaService.ObtenerTodos().Where(r => r.ID_Miembro == id).ToList();
-                    if (reservas.Any())
+                    MessageBox.Show("No se encontró un miembro con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // Nombre
+                if (!string.IsNullOrWhiteSpace(comboBoxNombreMiembro.Text))
+                {
+                    if (comboBoxNombreMiembro.Text.Any(char.IsDigit))
                     {
-                        MessageBox.Show("No se puede eliminar el miembro porque tiene reservas asociadas. Elimine primero todas las reservas de este miembro.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        contadorEliminarMiembro = 0;
+                        MessageBox.Show("El nombre no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-
-                    _miembroService.Eliminar(id);
-
-                    contadorEliminarMiembro = 0;
-                    LlenarComboBoxMiembros();
+                    miembro.Nombre = comboBoxNombreMiembro.Text;
                 }
+
+                // Apellido
+                if (!string.IsNullOrWhiteSpace(textBoxApellidoMiembro.Text))
+                {
+                    if (textBoxApellidoMiembro.Text.Any(char.IsDigit))
+                    {
+                        MessageBox.Show("El apellido no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    miembro.Apellido = textBoxApellidoMiembro.Text;
+                }
+
+                // Fecha de nacimiento
+                if (dateTimePickerFNacimeinto.CustomFormat != " ")
+                {
+                    var fechaNacimiento = dateTimePickerFNacimeinto.Value;
+                    var hoy = DateTime.Today;
+                    int edad = hoy.Year - fechaNacimiento.Year;
+                    if (fechaNacimiento > hoy.AddYears(-edad)) edad--;
+                    if (edad < 14)
+                    {
+                        MessageBox.Show("Solo se pueden registrar personas mayores o iguales a 14 años.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    miembro.FechaNacimiento = fechaNacimiento;
+                }
+
+                // Email
+                if (!string.IsNullOrWhiteSpace(textBoxEmailMiembro.Text))
+                {
+                    if (!Regex.IsMatch(textBoxEmailMiembro.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                    {
+                        MessageBox.Show("El correo electrónico no tiene un formato válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    if (_miembroService.ObtenerTodos().Any(m => m.ID_Miembro != id && m.Email.Equals(textBoxEmailMiembro.Text, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        MessageBox.Show("El correo electrónico ya está registrado para otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    miembro.Email = textBoxEmailMiembro.Text;
+                }
+
+                // Teléfono
+                if (!string.IsNullOrWhiteSpace(textBoxTelefonoMiembro.Text))
+                {
+                    if (!Regex.IsMatch(textBoxTelefonoMiembro.Text, @"^\d{8}$"))
+                    {
+                        MessageBox.Show("El teléfono debe contener exactamente 8 dígitos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    if (_miembroService.ObtenerTodos().Any(m => m.ID_Miembro != id && m.Telefono == textBoxTelefonoMiembro.Text))
+                    {
+                        MessageBox.Show("El teléfono ya está registrado para otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    miembro.Telefono = textBoxTelefonoMiembro.Text;
+                }
+
+                // Membresía (no se puede cambiar)
+                if (!string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text) && int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
+                {
+                    if (idMembresia != miembro.ID_Membresia)
+                    {
+                        MessageBox.Show("El ID de Membresía no se puede actualizar porque está vinculado al miembro.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
+                _miembroService.Actualizar(miembro);
+                MessageBox.Show("¡Miembro actualizado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LlenarComboBoxMiembros();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al actualizar el miembro: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+       private void EliminarMiembro()
+{
+    if (contadorEliminarMiembro == 0)
+    {
+        if (!int.TryParse(textBoxIdMiembro.Text, out int id))
+        {
+            MessageBox.Show("Por favor, ingrese un ID válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        var miembro = _miembroService.ObtenerPorId(id);
+        if (miembro == null)
+        {
+            MessageBox.Show("No se encontró un miembro con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        CompletarControlesMiembro(miembro);
+        MessageBox.Show($"Se ha encontrado al miembro: {miembro.Nombre}. Haz clic en el botón 'Eliminar' para confirmar la eliminación.",
+                        "Confirmar eliminación", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        contadorEliminarMiembro++;
+    }
+    else
+    {
+        if (!int.TryParse(textBoxIdMiembro.Text, out int id))
+        {
+            MessageBox.Show("Por favor, ingrese un ID válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            contadorEliminarMiembro = 0;
+            return;
+        }
+
+        var reservas = _reservaService.ObtenerTodos().Where(r => r.ID_Miembro == id).ToList();
+        if (reservas.Any())
+        {
+            MessageBox.Show("No se puede eliminar el miembro porque tiene reservas asociadas. Elimine primero todas las reservas de este miembro.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            contadorEliminarMiembro = 0;
+            return;
+        }
+
+        try
+        {
+            _miembroService.Eliminar(id);
+            MessageBox.Show("Miembro eliminado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            contadorEliminarMiembro = 0;
+            LlenarComboBoxMiembros();
+            ListarMiembros(); // Refresca el DataGridView
+            LimpiarControlesMiembro();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error al eliminar el miembro: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            contadorEliminarMiembro = 0;
+        }
+    }
+}
 
         private void dateTimePickerFNacimeinto_ValueChanged_1(object sender, EventArgs e)
         {

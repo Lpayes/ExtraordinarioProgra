@@ -329,9 +329,11 @@ namespace GimnasioManager.UI
                 membresia.Precio = numericUpDownPrecio.Value;
 
                 _membresiaService.Actualizar(membresia);
+                CompletarControlesMembresia(membresia);
+                VerMembresias();
                 MessageBox.Show("¡Membresía actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                LimpiarControlesMembresia();
+                
             }
             catch (Exception ex)
             {

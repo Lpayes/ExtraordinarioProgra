@@ -114,16 +114,38 @@ namespace GimnasioManager.UI
                 MessageBox.Show("El campo 'Nombre' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
+            if (comboBoxNombreInstructor.Text.Any(char.IsDigit))
+            {
+                MessageBox.Show("El nombre no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             if (string.IsNullOrWhiteSpace(textBoxApellidoInstructor.Text))
             {
                 MessageBox.Show("El campo 'Apellido' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
+            if (textBoxApellidoInstructor.Text.Any(char.IsDigit))
+            {
+                MessageBox.Show("El apellido no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             if (string.IsNullOrWhiteSpace(textBoxEspecialidadInstructor.Text))
             {
                 MessageBox.Show("El campo 'Especialidad' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            // Validar especialidad permitida (si tienes una lista)  
+            if (!InstructorService.EspecialidadesPermitidas.Contains(textBoxEspecialidadInstructor.Text))
+            {
+                MessageBox.Show("La especialidad no es válida. Debe ser: " + string.Join(", ", InstructorService.EspecialidadesPermitidas), "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            // Validar que no se repita nombre y apellido  
+            if (_instructorService.ObtenerTodos().Any(i =>
+                i.Nombre.Equals(comboBoxNombreInstructor.Text, StringComparison.OrdinalIgnoreCase) &&
+                i.Apellido.Equals(textBoxApellidoInstructor.Text, StringComparison.OrdinalIgnoreCase)))
+            {
+                MessageBox.Show("Ya existe un instructor con ese nombre y apellido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -134,8 +156,18 @@ namespace GimnasioManager.UI
                 Especialidad = textBoxEspecialidadInstructor.Text
             };
 
-            _instructorService.Crear(instructor);
-            LlenarComboBoxInstructores();
+            try
+            {
+                _instructorService.Crear(instructor);
+                MessageBox.Show("¡Instructor registrado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LlenarComboBoxInstructores();
+                ListarInstructores();
+                LimpiarControlesInstructor();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al registrar el instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void ListarInstructores()
@@ -143,12 +175,14 @@ namespace GimnasioManager.UI
             try
             {
                 var instructores = _instructorService.ObtenerTodos();
+                dataGridViewInstructor.DataSource = null;
                 if (instructores != null && instructores.Any())
                 {
                     dataGridViewInstructor.DataSource = instructores;
                 }
                 else
                 {
+                    dataGridViewInstructor.Rows.Clear();
                     MessageBox.Show("No se encontraron instructores.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -205,11 +239,17 @@ namespace GimnasioManager.UI
                     var instructor = _instructorService.ObtenerPorId(id);
                     if (instructor != null)
                     {
-                        // Validar si se intenta cambiar la especialidad y el instructor tiene clases asignadas
                         var clasesAsignadas = _claseService.ObtenerTodos().Where(c => c.ID_Instructor == id).ToList();
                         string nuevaEspecialidad = !string.IsNullOrWhiteSpace(textBoxEspecialidadInstructor.Text)
                             ? textBoxEspecialidadInstructor.Text
                             : instructor.Especialidad;
+
+                        if (!string.IsNullOrWhiteSpace(textBoxEspecialidadInstructor.Text) &&
+                            !InstructorService.EspecialidadesPermitidas.Contains(textBoxEspecialidadInstructor.Text))
+                        {
+                            MessageBox.Show("La especialidad no es válida. Debe ser: " + string.Join(", ", InstructorService.EspecialidadesPermitidas), "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
 
                         if (clasesAsignadas.Any() && !string.Equals(instructor.Especialidad, nuevaEspecialidad, StringComparison.OrdinalIgnoreCase))
                         {
@@ -220,14 +260,45 @@ namespace GimnasioManager.UI
                             return;
                         }
 
-                        instructor.Nombre = !string.IsNullOrWhiteSpace(comboBoxNombreInstructor.Text) ? comboBoxNombreInstructor.Text : instructor.Nombre;
-                        instructor.Apellido = !string.IsNullOrWhiteSpace(textBoxApellidoInstructor.Text) ? textBoxApellidoInstructor.Text : instructor.Apellido;
+                        if (!string.IsNullOrWhiteSpace(comboBoxNombreInstructor.Text))
+                        {
+                            if (comboBoxNombreInstructor.Text.Any(char.IsDigit))
+                            {
+                                MessageBox.Show("El nombre no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(textBoxApellidoInstructor.Text))
+                        {
+                            if (textBoxApellidoInstructor.Text.Any(char.IsDigit))
+                            {
+                                MessageBox.Show("El apellido no debe contener números.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+
+                        string nuevoNombre = !string.IsNullOrWhiteSpace(comboBoxNombreInstructor.Text) ? comboBoxNombreInstructor.Text : instructor.Nombre;
+                        string nuevoApellido = !string.IsNullOrWhiteSpace(textBoxApellidoInstructor.Text) ? textBoxApellidoInstructor.Text : instructor.Apellido;
+                        if (_instructorService.ObtenerTodos().Any(i =>
+                            i.ID_Instructor != id &&
+                            i.Nombre.Equals(nuevoNombre, StringComparison.OrdinalIgnoreCase) &&
+                            i.Apellido.Equals(nuevoApellido, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            MessageBox.Show("Ya existe otro instructor con ese nombre y apellido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+
+                        instructor.Nombre = nuevoNombre;
+                        instructor.Apellido = nuevoApellido;
                         instructor.Especialidad = nuevaEspecialidad;
 
                         _instructorService.ActualizarInstructor(instructor);
                         MessageBox.Show("¡Instructor actualizado con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                         LlenarComboBoxInstructores();
+                        ListarInstructores();
+                        LimpiarControlesInstructor();
                     }
                     else
                     {

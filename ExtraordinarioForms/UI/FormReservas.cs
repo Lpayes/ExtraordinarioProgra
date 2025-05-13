@@ -254,18 +254,22 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                if (int.TryParse(textBoxIdMiembroReserva.Text, out int idMiembro))
+                // ID Miembro
+                int idMiembro = reserva.ID_Miembro;
+                if (!string.IsNullOrWhiteSpace(textBoxIdMiembroReserva.Text) && int.TryParse(textBoxIdMiembroReserva.Text, out int idMiembroNuevo))
                 {
-                    if (!ValidarMembresiaActiva(idMiembro, reserva.FechaReserva))
+                    if (!ValidarMembresiaActiva(idMiembroNuevo, reserva.FechaReserva))
                     {
                         return;
                     }
-                    reserva.ID_Miembro = idMiembro;
+                    idMiembro = idMiembroNuevo;
                 }
 
-                if (int.TryParse(textBoxIdClaseReserva.Text, out int idClase))
+                // ID Clase
+                int idClase = reserva.ID_Clase;
+                if (!string.IsNullOrWhiteSpace(textBoxIdClaseReserva.Text) && int.TryParse(textBoxIdClaseReserva.Text, out int idClaseNuevo))
                 {
-                    var clase = _claseService.ObtenerPorId(idClase);
+                    var clase = _claseService.ObtenerPorId(idClaseNuevo);
                     if (clase == null)
                     {
                         MessageBox.Show("No se encontró una clase con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -273,7 +277,7 @@ namespace GimnasioManager.UI
                     }
 
                     var reservasClase = _reservaService.ObtenerTodos()
-                        .Where(r => r.ID_Clase == idClase && r.FechaReserva.Date == reserva.FechaReserva.Date && r.ID_Reserva != idReserva)
+                        .Where(r => r.ID_Clase == idClaseNuevo && r.FechaReserva.Date == reserva.FechaReserva.Date && r.ID_Reserva != idReserva)
                         .ToList();
 
                     if (reservasClase.Count >= clase.CapacidadMaxima)
@@ -283,26 +287,31 @@ namespace GimnasioManager.UI
                         return;
                     }
 
-                    reserva.ID_Clase = idClase;
-                }
+                    idClase = idClaseNuevo;
+                } // aca no se rrellenan los controladores
 
+                DateTime fechaReserva = reserva.FechaReserva;
                 if (dateTimePickerFReserva.CustomFormat != " ")
                 {
                     DateTime nuevaFechaReserva = dateTimePickerFReserva.Value;
 
-                    if (!ValidarMembresiaActiva(reserva.ID_Miembro, nuevaFechaReserva))
+                    if (!ValidarMembresiaActiva(idMiembro, nuevaFechaReserva))
                     {
                         return;
                     }
 
-                    reserva.FechaReserva = nuevaFechaReserva;
+                    fechaReserva = nuevaFechaReserva;
                 }
 
+                // Asignar los valores finales
+                reserva.ID_Miembro = idMiembro;
+                reserva.ID_Clase = idClase;
+                reserva.FechaReserva = fechaReserva;
                 _reservaService.Actualizar(reserva);
                 MessageBox.Show("¡Reserva actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 VerReservas();
-                LimpiarControlesReserva();
+                // aca no se rrellenan los controladores
             }
             catch (Exception ex)
             {

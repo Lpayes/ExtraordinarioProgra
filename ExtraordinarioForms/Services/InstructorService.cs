@@ -44,11 +44,11 @@ namespace GimnasioManager.Services
                 command.Parameters.AddWithValue("@Especialidad", instructor.Especialidad);
 
                 instructor.ID_Instructor = Convert.ToInt32(command.ExecuteScalar());
-                MessageBox.Show($"Instructor creado con éxito. ID: {instructor.ID_Instructor}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al crear instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 
@@ -76,7 +76,7 @@ namespace GimnasioManager.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al obtener instructores: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
             return instructores;
         }
@@ -106,7 +106,7 @@ namespace GimnasioManager.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al obtener instructor por ID: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
             return null;
         }
@@ -115,31 +115,23 @@ namespace GimnasioManager.Services
         {
             try
             {
-                if (!EspecialidadesPermitidas.Contains(instructor.Especialidad, StringComparer.OrdinalIgnoreCase))
-                {
-                    MessageBox.Show("No se necesita un instructor con esta especialidad por el momento. Solo necesitamos personas con las siguientes especialidades: Yoga, Spinning, CrossFit, Boxeo.",
-                                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
                 using var connection = _dbManager.GetConnection();
                 connection.Open();
-
-                var command = new SqlCommand(
-                    "UPDATE Instructores SET Nombre = @Nombre, Apellido = @Apellido, Especialidad = @Especialidad " +
-                    "WHERE ID_Instructor = @ID_Instructor", connection);
+                var command = new SqlCommand(@"
+                    UPDATE Instructores
+                    SET Nombre = @Nombre, Apellido = @Apellido, Email = @Email, Telefono = @Telefono, Especialidad = @Especialidad
+                    WHERE ID_Instructor = @ID_Instructor", connection);
 
                 command.Parameters.AddWithValue("@ID_Instructor", instructor.ID_Instructor);
                 command.Parameters.AddWithValue("@Nombre", instructor.Nombre);
                 command.Parameters.AddWithValue("@Apellido", instructor.Apellido);
                 command.Parameters.AddWithValue("@Especialidad", instructor.Especialidad);
 
-                int rows = command.ExecuteNonQuery();
-                MessageBox.Show(rows > 0 ? "Instructor actualizado con éxito." : "No se encontró el instructor a actualizar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al actualizar el instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 
@@ -151,12 +143,16 @@ namespace GimnasioManager.Services
                 connection.Open();
                 var command = new SqlCommand("DELETE FROM Instructores WHERE ID_Instructor = @ID_Instructor", connection);
                 command.Parameters.AddWithValue("@ID_Instructor", id);
-                int rows = command.ExecuteNonQuery();
-                MessageBox.Show(rows > 0 ? "Instructor eliminado." : "No se encontró el instructor para eliminar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
+            catch (SqlException ex) when (ex.Number == 547)
             {
-                MessageBox.Show($"Error al eliminar instructor: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw new InvalidOperationException("No se puede eliminar el instructor porque tiene clases asociadas. Elimine las clases primero.", ex);
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

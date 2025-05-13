@@ -159,6 +159,7 @@ namespace GimnasioManager.UI
                 _claseService.Crear(clase);
                 MessageBox.Show("¡Clase registrada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LimpiarControlesClase();
+                ListarClases();
             }
             catch (Exception ex)
             {
@@ -254,22 +255,36 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                if (comboBoxNombreClase.SelectedIndex == -1)
+                // Nombre de clase  
+                string nombreClase = comboBoxNombreClase.SelectedIndex != -1
+                    ? comboBoxNombreClase.SelectedItem.ToString()
+                    : clase.NombreClase;
+
+                // Horario  
+                TimeSpan horario;
+                if (!string.IsNullOrWhiteSpace(maskedTextBoxHorario.Text) && TimeSpan.TryParse(maskedTextBoxHorario.Text, out TimeSpan horarioNuevo))
                 {
-                    MessageBox.Show("Por favor, seleccione un nombre de clase.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    horario = horarioNuevo;
+                }
+                else
+                {
+                    horario = clase.Horario;
                 }
 
-                if (!TimeSpan.TryParse(maskedTextBoxHorario.Text, out TimeSpan horario))
-                {
-                    MessageBox.Show("Por favor, ingrese un horario válido en formato HH:mm:ss.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+                // Capacidad máxima  
+                int capacidadMaxima = numericUpDownCapacidadMaxima.Value > 0
+                    ? (int)numericUpDownCapacidadMaxima.Value
+                    : clase.CapacidadMaxima;
 
-                if (!int.TryParse(textBoxIdInstructorClase.Text, out int idInstructor))
+                // ID Instructor  
+                int idInstructor;
+                if (!string.IsNullOrWhiteSpace(textBoxIdInstructorClase.Text) && int.TryParse(textBoxIdInstructorClase.Text, out int idInstructorNuevo))
                 {
-                    MessageBox.Show("Por favor, ingrese un ID de instructor válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    idInstructor = idInstructorNuevo;
+                }
+                else
+                {
+                    idInstructor = clase.ID_Instructor;
                 }
 
                 var instructor = _instructorService.ObtenerPorId(idInstructor);
@@ -279,7 +294,6 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                string nombreClase = comboBoxNombreClase.SelectedItem.ToString();
                 if (!string.Equals(instructor.Especialidad, nombreClase, StringComparison.OrdinalIgnoreCase))
                 {
                     MessageBox.Show($"El instructor no tiene la especialidad requerida para esta clase. Especialidad del instructor: {instructor.Especialidad}.",
@@ -307,13 +321,17 @@ namespace GimnasioManager.UI
                     return;
                 }
 
+                // Asignar solo los campos modificados  
                 clase.Horario = horario;
-                clase.CapacidadMaxima = numericUpDownCapacidadMaxima.Value > 0 ? (int)numericUpDownCapacidadMaxima.Value : clase.CapacidadMaxima;
+                clase.CapacidadMaxima = capacidadMaxima;
                 clase.ID_Instructor = idInstructor;
+                // El nombre de la clase no se puede cambiar por la lógica de negocio, pero si se pudiera:  
+                // clase.NombreClase = nombreClase;  
 
                 _claseService.Actualizar(clase);
                 MessageBox.Show("¡Clase actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LimpiarControlesClase();
+                ListarClases();
             }
             catch (Exception ex)
             {

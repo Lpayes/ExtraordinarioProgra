@@ -33,11 +33,10 @@ namespace GimnasioManager.Services
                 command.Parameters.AddWithValue("@FechaReserva", reserva.FechaReserva);
 
                 reserva.ID_Reserva = Convert.ToInt32(command.ExecuteScalar());
-                MessageBox.Show($"Reserva creada con ID: {reserva.ID_Reserva}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al crear reserva: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 
@@ -72,7 +71,7 @@ namespace GimnasioManager.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al obtener reservas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
             return reservas;
         }
@@ -110,7 +109,7 @@ namespace GimnasioManager.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al obtener reserva por ID: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
             return null;
         }
@@ -133,11 +132,11 @@ namespace GimnasioManager.Services
                 command.Parameters.AddWithValue("@FechaReserva", reserva.FechaReserva);
 
                 int rows = command.ExecuteNonQuery();
-                MessageBox.Show(rows > 0 ? "Reserva actualizada." : "No se encontró la reserva para actualizar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+               
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al actualizar reserva: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 
@@ -155,7 +154,7 @@ namespace GimnasioManager.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al eliminar reserva: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 

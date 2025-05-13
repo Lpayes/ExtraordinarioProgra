@@ -22,8 +22,7 @@ namespace GimnasioManager.Services
             {
                 if (!_dbManager.TestConnection())
                 {
-                    MessageBox.Show("Error: No se pudo establecer conexión con la base de datos.", "Error de Conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    throw new InvalidOperationException("No se pudo establecer conexión con la base de datos.");
                 }
 
                 using var connection = _dbManager.GetConnection();
@@ -39,11 +38,10 @@ namespace GimnasioManager.Services
                 command.Parameters.AddWithValue("@ID_Instructor", clase.ID_Instructor);
 
                 clase.ID_Clase = Convert.ToInt32(command.ExecuteScalar());
-                MessageBox.Show($"Clase creada con ID: {clase.ID_Clase}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al crear clase: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 
@@ -57,10 +55,10 @@ namespace GimnasioManager.Services
                 connection.Open();
 
                 var command = new SqlCommand(@"  
-                       SELECT c.ID_Clase, c.NombreClase, c.CapacidadMaxima, c.Horario, c.ID_Instructor,   
-                              i.Nombre + ' ' + i.Apellido AS NombreInstructor  
-                       FROM Clases c  
-                       JOIN Instructores i ON c.ID_Instructor = i.ID_Instructor", connection);
+                          SELECT c.ID_Clase, c.NombreClase, c.CapacidadMaxima, c.Horario, c.ID_Instructor,   
+                                 i.Nombre + ' ' + i.Apellido AS NombreInstructor  
+                          FROM Clases c  
+                          JOIN Instructores i ON c.ID_Instructor = i.ID_Instructor", connection);
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -72,13 +70,13 @@ namespace GimnasioManager.Services
                         CapacidadMaxima = reader.GetInt32(2),
                         Horario = reader.GetTimeSpan(3),
                         ID_Instructor = reader.GetInt32(4),
-                        NombreInstructor = reader.GetString(5) // Nombre completo del instructor  
+                        NombreInstructor = reader.GetString(5)
                     });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al obtener clases: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
 
             return clases;
@@ -93,11 +91,11 @@ namespace GimnasioManager.Services
                 connection.Open();
 
                 var command = new SqlCommand(@"  
-                       SELECT c.ID_Clase, c.NombreClase, c.CapacidadMaxima, c.Horario, c.ID_Instructor,   
-                              i.Nombre + ' ' + i.Apellido AS NombreInstructor  
-                       FROM Clases c  
-                       JOIN Instructores i ON c.ID_Instructor = i.ID_Instructor  
-                       WHERE c.ID_Clase = @Id", connection);
+                          SELECT c.ID_Clase, c.NombreClase, c.CapacidadMaxima, c.Horario, c.ID_Instructor,   
+                                 i.Nombre + ' ' + i.Apellido AS NombreInstructor  
+                          FROM Clases c  
+                          JOIN Instructores i ON c.ID_Instructor = i.ID_Instructor  
+                          WHERE c.ID_Clase = @Id", connection);
 
                 command.Parameters.AddWithValue("@Id", id);
 
@@ -111,13 +109,13 @@ namespace GimnasioManager.Services
                         CapacidadMaxima = reader.GetInt32(2),
                         Horario = reader.GetTimeSpan(3),
                         ID_Instructor = reader.GetInt32(4),
-                        NombreInstructor = reader.GetString(5) // Nombre completo del instructor  
+                        NombreInstructor = reader.GetString(5)
                     };
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al obtener clase por ID: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
 
             return null;
@@ -141,12 +139,11 @@ namespace GimnasioManager.Services
                 command.Parameters.AddWithValue("@Horario", clase.Horario);
                 command.Parameters.AddWithValue("@ID_Instructor", clase.ID_Instructor);
 
-                int rows = command.ExecuteNonQuery();
-                MessageBox.Show(rows > 0 ? "Clase actualizada exitosamente." : "No se encontró la clase a actualizar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al actualizar clase: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
 
@@ -161,12 +158,11 @@ namespace GimnasioManager.Services
                 var command = new SqlCommand("DELETE FROM Clases WHERE ID_Clase = @ID_Clase", connection);
                 command.Parameters.AddWithValue("@ID_Clase", id);
 
-                int rows = command.ExecuteNonQuery();
-                MessageBox.Show(rows > 0 ? "Clase eliminada exitosamente." : "No se encontró la clase a eliminar.", "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al eliminar clase: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
     }
