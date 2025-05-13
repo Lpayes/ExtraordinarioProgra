@@ -154,12 +154,6 @@ namespace GimnasioManager.UI
                 return;
             }
 
-            if (dateTimePickerFNacimeinto.CustomFormat == " ")
-            {
-                MessageBox.Show("Por favor, seleccione una fecha de nacimiento.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             var fechaNacimiento = dateTimePickerFNacimeinto.Value;
             var hoy = DateTime.Today;
             int edad = hoy.Year - fechaNacimiento.Year;
@@ -195,20 +189,30 @@ namespace GimnasioManager.UI
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text))
+            if (string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text))
             {
-                if (!int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
-                {
-                    MessageBox.Show("El ID de Membresía debe ser un número válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+                MessageBox.Show("El campo 'ID de Membresía' es obligatorio.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-                var membresia = _membresiaService.ObtenerPorId(idMembresia);
-                if (membresia == null)
-                {
-                    MessageBox.Show("La membresía especificada no existe.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+            if (!int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
+            {
+                MessageBox.Show("El ID de Membresía debe ser un número válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var membresia = _membresiaService.ObtenerPorId(idMembresia);
+            if (membresia == null)
+            {
+                MessageBox.Show("La membresía especificada no existe.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Validar que no se registre un miembro con un ID ya existente  
+            if (_miembroService.ObtenerTodos().Any(m => m.ID_Membresia == idMembresia))
+            {
+                MessageBox.Show("Cada miembro tiene su propia membresía y esta ya está asignada a otro miembro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             var miembro = new Miembro
@@ -218,7 +222,7 @@ namespace GimnasioManager.UI
                 FechaNacimiento = dateTimePickerFNacimeinto.Value,
                 Email = textBoxEmailMiembro.Text,
                 Telefono = textBoxTelefonoMiembro.Text,
-                ID_Membresia = int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresiaValido) ? idMembresiaValido : 0
+                ID_Membresia = idMembresia
             };
 
             try
@@ -318,22 +322,13 @@ namespace GimnasioManager.UI
                             return;
                         }
 
-                        if (!string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text))
+                        if (!string.IsNullOrWhiteSpace(textBoxIdMembresiaMiembro.Text) && int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
                         {
-                            if (!int.TryParse(textBoxIdMembresiaMiembro.Text, out int idMembresia))
+                            if (idMembresia != miembro.ID_Membresia)
                             {
-                                MessageBox.Show("El ID de Membresía debe ser un número válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("El ID de Membresía no se puede actualizar porque está vinculado al miembro.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
-
-                            var membresia = _membresiaService.ObtenerPorId(idMembresia);
-                            if (membresia == null)
-                            {
-                                MessageBox.Show("La membresía especificada no existe.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                return;
-                            }
-
-                            miembro.ID_Membresia = idMembresia;
                         }
 
                         _miembroService.Actualizar(miembro);

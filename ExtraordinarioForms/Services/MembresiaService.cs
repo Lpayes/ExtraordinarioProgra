@@ -149,7 +149,8 @@ namespace GimnasioManager.Services
         using var connection = _dbManager.GetConnection();
         connection.Open();
 
-        // Consulta para obtener los datos de la membresía asociada al miembro
+        // Consulta 0
+        // para obtener los datos de la membresía asociada al miembro
         var command = new SqlCommand(@"
             SELECT m.ID_Membresia, m.TipoMembresia, m.Precio, m.FechaInicio, m.FechaFin
             FROM Membresias m

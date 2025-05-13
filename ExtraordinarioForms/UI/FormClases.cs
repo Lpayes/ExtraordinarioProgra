@@ -246,6 +246,14 @@ namespace GimnasioManager.UI
                     return;
                 }
 
+                // Validación adicional: Verificar si la clase tiene reservas asociadas  
+                var reservas = _reservaService.ObtenerTodos().Where(r => r.ID_Clase == idClase).ToList();
+                if (reservas.Any())
+                {
+                    MessageBox.Show("No se puede actualizar la clase porque tiene reservas asociadas. Elimine primero todas las reservas de esta clase.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 if (comboBoxNombreClase.SelectedIndex == -1)
                 {
                     MessageBox.Show("Por favor, seleccione un nombre de clase.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -279,6 +287,13 @@ namespace GimnasioManager.UI
                     return;
                 }
 
+                if (!string.Equals(clase.NombreClase, nombreClase, StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("No se puede cambiar el tipo de clase porque no coincide con la especialidad del instructor.",
+                                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 var clases = _claseService.ObtenerTodos();
                 var conflicto = clases.Any(c => c.ID_Instructor == idInstructor &&
                                                  c.ID_Clase != idClase &&
@@ -292,7 +307,6 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                clase.NombreClase = nombreClase;
                 clase.Horario = horario;
                 clase.CapacidadMaxima = numericUpDownCapacidadMaxima.Value > 0 ? (int)numericUpDownCapacidadMaxima.Value : clase.CapacidadMaxima;
                 clase.ID_Instructor = idInstructor;

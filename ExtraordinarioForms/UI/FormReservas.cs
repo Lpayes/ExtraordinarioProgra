@@ -254,68 +254,54 @@ namespace GimnasioManager.UI
                     return;
                 }
 
-                if (!int.TryParse(textBoxIdMiembroReserva.Text, out int idMiembro))
+                if (int.TryParse(textBoxIdMiembroReserva.Text, out int idMiembro))
                 {
-                    MessageBox.Show("Por favor, ingrese un ID de miembro válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    if (!ValidarMembresiaActiva(idMiembro, reserva.FechaReserva))
+                    {
+                        return;
+                    }
+                    reserva.ID_Miembro = idMiembro;
                 }
 
-                if (!int.TryParse(textBoxIdClaseReserva.Text, out int idClase))
+                if (int.TryParse(textBoxIdClaseReserva.Text, out int idClase))
                 {
-                    MessageBox.Show("Por favor, ingrese un ID de clase válido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    var clase = _claseService.ObtenerPorId(idClase);
+                    if (clase == null)
+                    {
+                        MessageBox.Show("No se encontró una clase con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    var reservasClase = _reservaService.ObtenerTodos()
+                        .Where(r => r.ID_Clase == idClase && r.FechaReserva.Date == reserva.FechaReserva.Date && r.ID_Reserva != idReserva)
+                        .ToList();
+
+                    if (reservasClase.Count >= clase.CapacidadMaxima)
+                    {
+                        MessageBox.Show("No se puede actualizar la reserva. La clase ya alcanzó su capacidad máxima para esta fecha.",
+                                        "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    reserva.ID_Clase = idClase;
                 }
 
-                if (dateTimePickerFReserva.CustomFormat == " ")
+                if (dateTimePickerFReserva.CustomFormat != " ")
                 {
-                    MessageBox.Show("Por favor, seleccione una fecha de reserva.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    DateTime nuevaFechaReserva = dateTimePickerFReserva.Value;
+
+                    if (!ValidarMembresiaActiva(reserva.ID_Miembro, nuevaFechaReserva))
+                    {
+                        return;
+                    }
+
+                    reserva.FechaReserva = nuevaFechaReserva;
                 }
-
-                DateTime fechaReserva = dateTimePickerFReserva.Value;
-
-                if (!ValidarMembresiaActiva(idMiembro, fechaReserva))
-                {
-                    return;
-                }
-
-                var clase = _claseService.ObtenerPorId(idClase);
-                if (clase == null)
-                {
-                    MessageBox.Show("No se encontró una clase con el ID proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                var reservaDuplicada = _reservaService.ObtenerTodos()
-                    .Any(r => r.ID_Miembro == idMiembro && r.ID_Clase == idClase && r.FechaReserva.Date == fechaReserva.Date && r.ID_Reserva != idReserva);
-
-                if (reservaDuplicada)
-                {
-                    MessageBox.Show("No se puede actualizar la reserva. El miembro ya tiene una reserva para esta clase en la misma fecha.",
-                                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                var reservasClase = _reservaService.ObtenerTodos()
-                    .Where(r => r.ID_Clase == idClase && r.FechaReserva.Date == fechaReserva.Date && r.ID_Reserva != idReserva)
-                    .ToList();
-
-                if (reservasClase.Count >= clase.CapacidadMaxima)
-                {
-                    MessageBox.Show("No se puede actualizar la reserva. La clase ya alcanzó su capacidad máxima para esta fecha.",
-                                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                reserva.ID_Miembro = idMiembro;
-                reserva.ID_Clase = idClase;
-                reserva.FechaReserva = fechaReserva;
 
                 _reservaService.Actualizar(reserva);
                 MessageBox.Show("¡Reserva actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 VerReservas();
-
                 LimpiarControlesReserva();
             }
             catch (Exception ex)

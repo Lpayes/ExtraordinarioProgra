@@ -1,6 +1,8 @@
 ﻿
 using Microsoft.Data.SqlClient;
 using GimnasioManager.Models;
+using System;
+using GimnasioManager.Utils;
 
 namespace GimnasioManager.Services
 {
