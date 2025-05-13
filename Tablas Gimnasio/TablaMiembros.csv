@@ -1,0 +1,11 @@
+ID_Miembro,Nombre,Apellido,FechaNacimiento,Email,Telefono,ID_Membresia
+1,Lester,Payes,2005-05-12,lester@gmai.com,34567898,1
+2,David,Perez,2005-02-19,perezda@gmai.com,66745634,2
+3,María,Lopez,2004-10-19,Marialopez@gmai.com,43567854,3
+4,Alba,Martinez,2003-01-15,Marialopez@gmai.com,51908901,4
+5,Ami,Santos,2008-03-05,Ami@gmai.com,51901265,5
+6,Henry,Castro,2006-07-20,henry@gmail.com,51878908,6
+7,Ana,Ramirez,2006-07-14,ana@gmai.com,67871284,7
+8,Carolina,Ramirez,2006-07-14,Carolina@gmai.com,67871284,8
+9,Frank,Mendez,2006-07-14,mendezfrank@gmai.com,67871284,9
+10,Marco,Díaz,2006-07-30,Marco@gmai.com,01290438,10
