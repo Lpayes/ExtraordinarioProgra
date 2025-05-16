@@ -325,8 +325,7 @@ namespace GimnasioManager.UI
                 clase.Horario = horario;
                 clase.CapacidadMaxima = capacidadMaxima;
                 clase.ID_Instructor = idInstructor;
-                // El nombre de la clase no se puede cambiar por la lógica de negocio, pero si se pudiera:  
-                // clase.NombreClase = nombreClase;  
+                clase.NombreClase = nombreClase;  
 
                 _claseService.Actualizar(clase);
                 MessageBox.Show("¡Clase actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
